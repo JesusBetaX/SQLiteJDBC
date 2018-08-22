@@ -59,8 +59,8 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
     try (Connection conn = this.getWritableDatabase();
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-      pstmt.setString(1, "name");
-      pstmt.setDouble(2, 2.3);
+      pstmt.setString(1, name);
+      pstmt.setDouble(2, capacity);
       return pstmt.executeUpdate();
     }
   }
@@ -113,7 +113,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
 
   public static void main(String[] args) throws SQLException {
     MySQLiteOpenHelper dbHelper = new MySQLiteOpenHelper();
-    dbHelper.insert("Almacen 3", 45);
+    dbHelper.insert("Almacen 4", 35);
     dbHelper.selectAll();
   }
 }
