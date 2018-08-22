@@ -14,8 +14,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
     super(NAME_DB);
   }
 
-  @Override
-  public void onCreate(Connection db) throws SQLException {
+  @Override public void onCreate(Connection db) throws SQLException {
     // SQL statement for creating a new table
     String sql = "CREATE TABLE IF NOT EXISTS warehouses (\n"
             + "	id integer PRIMARY KEY,\n"

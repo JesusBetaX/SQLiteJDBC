@@ -111,8 +111,7 @@ public abstract class SQLiteOpenHelper {
    */
   public synchronized void close() {
     try {
-      if (mIsInitializing)
-        throw new IllegalStateException("Closed during initialization");
+      if (mIsInitializing) throw new IllegalStateException("Closed during initialization");
 
       if (mDatabase != null && !mDatabase.isClosed()) {
         mDatabase.close();
@@ -123,12 +122,9 @@ public abstract class SQLiteOpenHelper {
     }
   }
 
-  public void onConfigure(Connection db) throws SQLException {
-  }
+  public void onConfigure(Connection db) throws SQLException {}
 
   public abstract void onCreate(Connection db) throws SQLException;
 
-  public void onOpen(Connection db) throws SQLException {
-  }
-
+  public void onOpen(Connection db) throws SQLException {}
 }
