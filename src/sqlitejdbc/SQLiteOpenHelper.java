@@ -74,7 +74,15 @@ public abstract class SQLiteOpenHelper {
 
       db.setAutoCommit(false); //beginTransaction();
       try {
-        onCreate(db);
+        //if (version == 0) {
+          onCreate(db);
+        //} else {
+        //  if (version > mNewVersion) {
+        //    onDowngrade(db, version, mNewVersion);
+        //  } else {
+        //    onUpgrade(db, version, mNewVersion);
+        //  }
+        //}
         db.commit(); //setTransactionSuccessful();
       } catch (SQLException e) {
         db.rollback();
