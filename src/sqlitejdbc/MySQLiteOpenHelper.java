@@ -95,9 +95,10 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
    * Delete a warehouse specified by the id
    *
    * @param id
+   * @return 
    * @throws java.sql.SQLException
    */
-  public void delete(long id) throws SQLException {
+  public int delete(long id) throws SQLException {
     String sql = "DELETE FROM warehouses WHERE id = ?";
 
     try (Connection conn = this.getWritableDatabase();
@@ -106,8 +107,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
       // set the corresponding param
       pstmt.setLong(1, id);
       // execute the delete statement
-      pstmt.executeUpdate();
-
+      return pstmt.executeUpdate();
     } 
   }
 
