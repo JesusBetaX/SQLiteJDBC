@@ -8,13 +8,15 @@ import java.sql.Statement;
 
 public class MySQLiteOpenHelper extends SQLiteOpenHelper {
 
-  private static final String NAME_DB = "tests.db";
-
+  private static final String DATABASE_NAME  = "tests.db";
+  private static final int DATABASE_VERSION  = 1;
+  
   public MySQLiteOpenHelper() {
-    super(NAME_DB);
+    super(DATABASE_NAME, DATABASE_VERSION);
   }
 
   @Override public void onCreate(Connection db) throws SQLException {
+    System.out.println("sqlitejdbc.MySQLiteOpenHelper.onCreate()");
     // SQL statement for creating a new table
     String sql = "CREATE TABLE IF NOT EXISTS warehouses (\n"
             + "	id integer PRIMARY KEY,\n"
@@ -112,7 +114,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
 
   public static void main(String[] args) throws SQLException {
     MySQLiteOpenHelper dbHelper = new MySQLiteOpenHelper();
-    dbHelper.insert("Almacen 2", 78);
+    //dbHelper.insert("Almacen 2", 78);
     dbHelper.selectAll();
   }
 }

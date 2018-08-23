@@ -1,18 +1,39 @@
 package sqlitejdbc;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public abstract class SQLiteOpenHelper {
 
+  private File folder = new File("databases");
   private final String mName;
+  private final int mNewVersion;
 
   private Connection mDatabase;
   private boolean mIsInitializing;
 
-  public SQLiteOpenHelper(String databaseFilePath) {
+  public SQLiteOpenHelper(String databaseFilePath, int version) {
     mName = databaseFilePath;
+    mNewVersion = version;
+  }
+
+  public File getFolder() {
+    return folder;
+  }
+  public void setFolder(File folder) {
+    this.folder = folder;
+  }
+  
+  public File getDatabasePath(String name) {
+    if (!folder.exists()) {
+      folder.mkdirs();
+    }
+    return new File(folder, name);
   }
 
   public Connection getWritableDatabase() throws SQLException {
@@ -59,30 +80,33 @@ public abstract class SQLiteOpenHelper {
         if (writable && db.isReadOnly()) {
           db.setReadOnly(false);
         }
-      } else  {
-         try {
-          db = DriverManager.getConnection("jdbc:sqlite:" + mName);
+      } else {
+        final String path = getDatabasePath(mName).getPath();
+        try {
+          db = DriverManager.getConnection("jdbc:sqlite:" + path);
         } catch (SQLException ex) {
           if (writable) {
             throw ex;
           }
-          db = DriverManager.getConnection("jdbc:sqlite:" + mName);
+          db = DriverManager.getConnection("jdbc:sqlite:" + path);
         }
       }
 
       onConfigure(db);
 
+      final int version = getVersion(db);
       db.setAutoCommit(false); //beginTransaction();
       try {
-        //if (version == 0) {
+        if (version == 0) {
           onCreate(db);
-        //} else {
-        //  if (version > mNewVersion) {
-        //    onDowngrade(db, version, mNewVersion);
-        //  } else {
-        //    onUpgrade(db, version, mNewVersion);
-        //  }
-        //}
+        } else {
+          if (version > mNewVersion) {
+            onDowngrade(db, version, mNewVersion);
+          } else {
+            onUpgrade(db, version, mNewVersion);
+          }
+        }
+        setVersion(db, mNewVersion); 
         db.commit(); //setTransactionSuccessful();
       } catch (SQLException e) {
         db.rollback();
@@ -121,10 +145,58 @@ public abstract class SQLiteOpenHelper {
       // Empty
     }
   }
+  
+  // user_version
+  private int getVersion(Connection db) throws SQLException {
+    // SQL statement for creating a new table
+    String sql = "CREATE TABLE IF NOT EXISTS PRAGMA (\n"
+            + "	id integer PRIMARY KEY,\n"
+            + "	user_version integer NOT NULL\n"
+            + ");";
+    db.createStatement().execute(sql);
+    
+    sql = "SELECT user_version FROM PRAGMA LIMIT 1";
+    try (Statement stmt = db.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)) {
+      if (rs.next()) {
+        return rs.getInt("user_version");
+      }
+    }
+    
+    return 0;
+  }
+  
+  // user_version = " + version
+  private void setVersion(Connection db, int mNewVersion) throws SQLException {
+    String sql = "SELECT user_version FROM PRAGMA LIMIT 1";
+    try (Statement stmt = db.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)) {
+
+      if (rs.next()) {
+        sql = "UPDATE PRAGMA SET user_version = ?";
+        try (PreparedStatement pstmt = db.prepareStatement(sql)) {
+          pstmt.setInt(1, mNewVersion);
+          pstmt.executeUpdate();
+        }
+      } else {
+        sql = "INSERT INTO PRAGMA(user_version) VALUES(?)";
+        try (PreparedStatement pstmt = db.prepareStatement(sql)) {
+          pstmt.setInt(1, mNewVersion);
+          pstmt.executeUpdate();
+        }
+      }
+    }
+  }
 
   public void onConfigure(Connection db) throws SQLException {}
 
   public abstract void onCreate(Connection db) throws SQLException;
 
   public void onOpen(Connection db) throws SQLException {}
+
+  public void onDowngrade(Connection db, int version, int mNewVersion) 
+  throws SQLException{}
+
+  public void onUpgrade(Connection db, int version, int mNewVersion) 
+  throws SQLException {}
 }
