@@ -95,23 +95,25 @@ public abstract class SQLiteOpenHelper {
       onConfigure(db);
 
       final int version = getVersion(db);
-      db.setAutoCommit(false); //beginTransaction();
-      try {
-        if (version == 0) {
-          onCreate(db);
-        } else {
-          if (version > mNewVersion) {
-            onDowngrade(db, version, mNewVersion);
+      if (version != mNewVersion) {
+        db.setAutoCommit(false); //beginTransaction();
+        try {
+          if (version == 0) {
+            onCreate(db);
           } else {
-            onUpgrade(db, version, mNewVersion);
+            if (version > mNewVersion) {
+              onDowngrade(db, version, mNewVersion);
+            } else {
+              onUpgrade(db, version, mNewVersion);
+            }
           }
+          setVersion(db, mNewVersion);
+          db.commit(); //setTransactionSuccessful();
+        } catch (SQLException e) {
+          db.rollback();
+        } finally {
+          db.setAutoCommit(true);//endTransaction();
         }
-        setVersion(db, mNewVersion); 
-        db.commit(); //setTransactionSuccessful();
-      } catch (SQLException e) {
-        db.rollback();
-      } finally {
-        db.setAutoCommit(true);//endTransaction();
       }
 
       onOpen(db);
