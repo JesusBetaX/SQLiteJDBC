@@ -114,7 +114,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
 
   public static void main(String[] args) throws SQLException {
     MySQLiteOpenHelper dbHelper = new MySQLiteOpenHelper();
-    //dbHelper.insert("Almacen 2", 78);
+    //dbHelper.insert("Almacen 1", 93);
     dbHelper.selectAll();
   }
 }

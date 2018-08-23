@@ -96,6 +96,11 @@ public abstract class SQLiteOpenHelper {
 
       final int version = getVersion(db);
       if (version != mNewVersion) {
+        if (db.isReadOnly()) {
+          throw new SQLException("Can't upgrade read-only database from version "
+                  + version + " to " + mNewVersion + ": " + mName);
+        }
+        
         db.setAutoCommit(false); //beginTransaction();
         try {
           if (version == 0) {
