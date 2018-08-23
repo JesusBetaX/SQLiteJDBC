@@ -157,12 +157,8 @@ public abstract class SQLiteOpenHelper {
     sql = "SELECT user_version FROM schema LIMIT 1";
     try (Statement stmt = db.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
-      if (rs.next()) {
-        return rs.getInt("user_version");
-      }
+      return rs.next() ? rs.getInt("user_version") : 0;
     }
-    
-    return 0;
   }
   
   // user_version = " + version
