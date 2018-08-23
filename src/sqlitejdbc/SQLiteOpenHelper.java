@@ -149,12 +149,12 @@ public abstract class SQLiteOpenHelper {
   // user_version
   private int getVersion(Connection db) throws SQLException {
     // SQL statement for creating a new table
-    String sql = "CREATE TABLE IF NOT EXISTS PRAGMA (\n"
+    String sql = "CREATE TABLE IF NOT EXISTS schema (\n"
             + "	user_version integer NOT NULL\n"
             + ");";
     db.createStatement().execute(sql);
     
-    sql = "SELECT user_version FROM PRAGMA LIMIT 1";
+    sql = "SELECT user_version FROM schema LIMIT 1";
     try (Statement stmt = db.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
       if (rs.next()) {
@@ -167,18 +167,18 @@ public abstract class SQLiteOpenHelper {
   
   // user_version = " + version
   private void setVersion(Connection db, int mNewVersion) throws SQLException {
-    String sql = "SELECT user_version FROM PRAGMA LIMIT 1";
+    String sql = "SELECT user_version FROM schema LIMIT 1";
     try (Statement stmt = db.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
 
       if (rs.next()) {
-        sql = "UPDATE PRAGMA SET user_version = ?";
+        sql = "UPDATE schema SET user_version = ?";
         try (PreparedStatement pstmt = db.prepareStatement(sql)) {
           pstmt.setInt(1, mNewVersion);
           pstmt.executeUpdate();
         }
       } else {
-        sql = "INSERT INTO PRAGMA(user_version) VALUES(?)";
+        sql = "INSERT INTO schema(user_version) VALUES(?)";
         try (PreparedStatement pstmt = db.prepareStatement(sql)) {
           pstmt.setInt(1, mNewVersion);
           pstmt.executeUpdate();
