@@ -174,16 +174,12 @@ public abstract class SQLiteOpenHelper {
 
       if (rs.next()) {
         sql = "UPDATE schema SET user_version = ?";
-        try (PreparedStatement pstmt = db.prepareStatement(sql)) {
-          pstmt.setInt(1, mNewVersion);
-          pstmt.executeUpdate();
-        }
       } else {
         sql = "INSERT INTO schema(user_version) VALUES(?)";
-        try (PreparedStatement pstmt = db.prepareStatement(sql)) {
-          pstmt.setInt(1, mNewVersion);
-          pstmt.executeUpdate();
-        }
+      }
+      try (PreparedStatement pstmt = db.prepareStatement(sql)) {
+        pstmt.setInt(1, mNewVersion);
+        pstmt.executeUpdate();
       }
     }
   }
