@@ -10,15 +10,18 @@ import java.sql.Statement;
 
 public abstract class SQLiteOpenHelper {
 
-  private File folder = new File("databases");
+  private File folder;
   private final String mName;
   private final int mNewVersion;
 
   private Connection mDatabase;
   private boolean mIsInitializing;
-
-  public SQLiteOpenHelper(String databaseFilePath, int version) {
-    mName = databaseFilePath;
+  
+  public SQLiteOpenHelper(String name, int version) {
+    this(new File("databases"), name, version);
+  }
+  public SQLiteOpenHelper(File databaseFilePath, String name, int version) {
+    mName = name;
     mNewVersion = version;
   }
 
