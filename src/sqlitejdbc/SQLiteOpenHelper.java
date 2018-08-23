@@ -173,7 +173,7 @@ public abstract class SQLiteOpenHelper {
             ResultSet rs = stmt.executeQuery(sql)) {
 
       if (rs.next()) {
-        sql = "UPDATE PRAGMA SET user_version = ?";
+        sql = "UPDATE PRAGMA SET user_version = ? WHERE id = 1";
         try (PreparedStatement pstmt = db.prepareStatement(sql)) {
           pstmt.setInt(1, mNewVersion);
           pstmt.executeUpdate();
