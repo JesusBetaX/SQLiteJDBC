@@ -10,7 +10,7 @@ import java.sql.Statement;
 
 public abstract class SQLiteOpenHelper {
 
-  private File folder;
+  private File mFolder;
   private final String mName;
   private final int mNewVersion;
 
@@ -21,19 +21,20 @@ public abstract class SQLiteOpenHelper {
     this(new File("databases"), name, version);
   }
   public SQLiteOpenHelper(File databaseFilePath, String name, int version) {
+    mFolder = databaseFilePath;
     mName = name;
     mNewVersion = version;
   }
 
   public File getDatabasePath() {
-    if (!folder.exists()) folder.mkdirs();
-    return folder;
+    if (!mFolder.exists()) mFolder.mkdirs();
+    return mFolder;
   }
   public File getDatabasePath(String name) {
     return new File(getDatabasePath(), name);
   }
-  public void setDatabasePath(File folder) {
-    this.folder = folder;
+  public void setDatabasePath(File path) {
+    this.mFolder = path;
   }
 
   public Connection getWritableDatabase() throws SQLException {
