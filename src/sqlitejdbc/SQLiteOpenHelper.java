@@ -27,7 +27,6 @@ public abstract class SQLiteOpenHelper {
   }
 
   public File getDatabasePath() {
-    if (!mFolder.exists()) mFolder.mkdirs();
     return mFolder;
   }
   public File getDatabasePath(String name) {
@@ -79,17 +78,14 @@ public abstract class SQLiteOpenHelper {
           db.setReadOnly(false);
         }
       } else {
-        final String path = getDatabasePath(mName).getPath();
+        final File path = getDatabasePath(mName);
         try {
-          SQLiteConfig config = new SQLiteConfig();
-          config.setReadOnly(!writable);
-          db = config.createConnection("jdbc:sqlite:" + path);
+          db = openDatabase(path, writable);
         } catch (SQLException ex) {
           if (writable) {
             throw ex;
           }
-          SQLiteConfig config = new SQLiteConfig();
-          db = config.createConnection("jdbc:sqlite:" + path);
+          db = openOrCreateDatabase(path);
         }
       }
 
@@ -137,32 +133,33 @@ public abstract class SQLiteOpenHelper {
       }
     }
   }
-
-  /**
-   * Close any open database object.
-   */
-  public synchronized void close() {
-    try {
-      if (mIsInitializing) throw new IllegalStateException("Closed during initialization");
-
-      if (mDatabase != null && !mDatabase.isClosed()) {
-        mDatabase.close();
-        mDatabase = null;
-      }
-    } catch (SQLException ignore) {
-      // Empty
+  
+  private Connection openDatabase(File path, boolean writable) throws SQLException {
+    SQLiteConfig config = new SQLiteConfig();
+    config.setReadOnly(!writable);
+    return config.createConnection("jdbc:sqlite:" + path.getPath());
+  }
+  
+  private Connection openOrCreateDatabase(File path) throws SQLException {
+    File parent = path.getParentFile();
+    if (parent != null && !parent.exists()) {
+      parent.mkdirs();
     }
+    
+    SQLiteConfig config = new SQLiteConfig();
+    Connection conn = config.createConnection("jdbc:sqlite:" + path.getPath());
+    
+    String sql = "CREATE TABLE IF NOT EXISTS schema (\n"
+            + "	user_version integer NOT NULL\n"
+            + ");";
+    conn.createStatement().execute(sql);
+    
+    return conn;
   }
   
   // user_version
   private int getVersion(Connection db) throws SQLException {
-    // SQL statement for creating a new table
-    String sql = "CREATE TABLE IF NOT EXISTS schema (\n"
-            + "	user_version integer NOT NULL\n"
-            + ");";
-    db.createStatement().execute(sql);
-    
-    sql = "SELECT user_version FROM schema LIMIT 1";
+    String sql = "SELECT user_version FROM schema LIMIT 1";
     try (Statement stmt = db.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
       return rs.next() ? rs.getInt("user_version") : 0;
@@ -187,6 +184,22 @@ public abstract class SQLiteOpenHelper {
     }
   }
 
+  /**
+   * Close any open database object.
+   */
+  public synchronized void close() {
+    try {
+      if (mIsInitializing) throw new IllegalStateException("Closed during initialization");
+
+      if (mDatabase != null && !mDatabase.isClosed()) {
+        mDatabase.close();
+        mDatabase = null;
+      }
+    } catch (SQLException ignore) {
+      // Empty
+    }
+  }
+  
   public void onConfigure(Connection db) throws SQLException {}
 
   public abstract void onCreate(Connection db) throws SQLException;
