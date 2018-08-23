@@ -10,7 +10,7 @@ import java.sql.Statement;
 
 public abstract class SQLiteOpenHelper {
 
-  private File mFolder;
+  private final File mFolder;
   private final String mName;
   private final int mNewVersion;
 
@@ -32,9 +32,6 @@ public abstract class SQLiteOpenHelper {
   }
   public File getDatabasePath(String name) {
     return new File(getDatabasePath(), name);
-  }
-  public void setDatabasePath(File path) {
-    this.mFolder = path;
   }
 
   public Connection getWritableDatabase() throws SQLException {
