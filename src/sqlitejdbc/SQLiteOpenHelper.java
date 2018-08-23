@@ -73,12 +73,12 @@ public abstract class SQLiteOpenHelper {
     try {
       mIsInitializing = true;
 
+      final File path = getDatabasePath(mName);
       if (db != null) {
         if (writable && db.isReadOnly()) {
-          db.setReadOnly(false);
+          db = reopenReadWrite(path, db);
         }
       } else {
-        final File path = getDatabasePath(mName);
         try {
           db = openDatabase(path, writable);
         } catch (SQLException ex) {
@@ -128,6 +128,16 @@ public abstract class SQLiteOpenHelper {
       if (db != null && db != mDatabase) {
         db.close();
       }
+    }
+  }
+  
+  private Connection reopenReadWrite(File path, Connection db) throws SQLException {
+    synchronized(this) {
+      if (!db.isReadOnly()) {
+        return db; // nothing to do
+      }
+      db.close();
+      return openDatabase(path, true);
     }
   }
   
