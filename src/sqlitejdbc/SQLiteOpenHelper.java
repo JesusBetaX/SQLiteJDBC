@@ -82,9 +82,6 @@ public abstract class SQLiteOpenHelper {
         try {
           db = openDatabase(path, writable);
         } catch (SQLException ex) {
-          if (writable) {
-            throw ex;
-          }
           db = openOrCreateDatabase(path);
         }
       }
