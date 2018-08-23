@@ -2,11 +2,11 @@ package sqlitejdbc;
 
 import java.io.File;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.sqlite.SQLiteConfig;
 
 public abstract class SQLiteOpenHelper {
 
@@ -58,10 +58,10 @@ public abstract class SQLiteOpenHelper {
   private Connection getDatabaseLocked(boolean writable) throws SQLException {
     if (mDatabase != null) {
       if (mDatabase.isClosed()) {
-        // Darn!  The user closed the database by calling mDatabase.close().
+        // ¡Maldición! El usuario cerró la base de datos llamando a mDatabase.close ().
         mDatabase = null;
       } else if (!writable || !mDatabase.isReadOnly()) {
-        // The database is already open for business.
+        // La base de datos ya está abierta para los negocios.
         return mDatabase;
       }
     }
@@ -81,12 +81,15 @@ public abstract class SQLiteOpenHelper {
       } else {
         final String path = getDatabasePath(mName).getPath();
         try {
-          db = DriverManager.getConnection("jdbc:sqlite:" + path);
+          SQLiteConfig config = new SQLiteConfig();
+          config.setReadOnly(!writable);
+          db = config.createConnection("jdbc:sqlite:" + path);
         } catch (SQLException ex) {
           if (writable) {
             throw ex;
           }
-          db = DriverManager.getConnection("jdbc:sqlite:" + path);
+          SQLiteConfig config = new SQLiteConfig();
+          db = config.createConnection("jdbc:sqlite:" + path);
         }
       }
 
