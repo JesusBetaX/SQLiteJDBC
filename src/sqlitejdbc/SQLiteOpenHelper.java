@@ -22,18 +22,15 @@ public abstract class SQLiteOpenHelper {
     mNewVersion = version;
   }
 
-  public File getFolder() {
+  public File getDatabasePath() {
+    if (!folder.exists()) folder.mkdirs();
     return folder;
   }
-  public void setFolder(File folder) {
-    this.folder = folder;
-  }
-  
   public File getDatabasePath(String name) {
-    if (!folder.exists()) {
-      folder.mkdirs();
-    }
-    return new File(folder, name);
+    return new File(getDatabasePath(), name);
+  }
+  public void setDatabasePath(File folder) {
+    this.folder = folder;
   }
 
   public Connection getWritableDatabase() throws SQLException {
