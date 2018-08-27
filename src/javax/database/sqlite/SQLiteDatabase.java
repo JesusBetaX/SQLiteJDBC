@@ -151,15 +151,18 @@ public class SQLiteDatabase implements AutoCloseable {
    * @param initialValues contiene los valores de columna iniciales para la fila.
    * Las claves deben ser los nombres de las columnas y los valores valores de
    * la columna
+   * @param conflictAlgorithm
    *
    * @return el ID de la fila reci�n insertada, o -1 si se produjo un error
    *
    * @throws SQLException
    */
-  public long insert(String table, Map<String, Object> initialValues)
-          throws SQLException {
+  public long insertWithOnConflict(String table, Map<String, Object> initialValues, 
+          String conflictAlgorithm) throws SQLException {
     StringBuilder sql = new StringBuilder();
-    sql.append("INSERT INTO ");
+    sql.append("INSERT ");
+    sql.append(conflictAlgorithm);
+    sql.append(" INTO ");
     sql.append(table);
     sql.append('(');
 
@@ -179,6 +182,16 @@ public class SQLiteDatabase implements AutoCloseable {
     sql.append(')');
 
     return insertAndGetId(sql.toString(), bindArgs);
+  }
+  
+  public long insert(String table, Map<String, Object> initialValues) 
+          throws SQLException {
+    return insertWithOnConflict(table, initialValues, "");
+  }
+  
+  public long repleace(String table, Map<String, Object> initialValues) 
+          throws SQLException {
+    return insertWithOnConflict(table, initialValues, "OR REPLACE");
   }
 
   /**
