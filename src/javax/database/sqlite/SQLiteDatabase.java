@@ -236,7 +236,7 @@ public class SQLiteDatabase implements AutoCloseable {
    * @param table nombre de la tabla donde se eliminara
    * @param whereClause [opcional] cláusula WHERE para aplicar la eliminación.
    * Pasar null elimina todas las filas.
-   * @param whereArgs [opcional] Puede incluirse en la cl�usula WHERE, que será
+   * @param whereArgs [opcional] Puede incluirse en la cláusula WHERE, que será
    * reemplazado por los valores de whereArgs. Los valores se enlazarán como
    * cadenas.
    *
