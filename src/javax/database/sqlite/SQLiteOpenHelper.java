@@ -163,9 +163,35 @@ public abstract class SQLiteOpenHelper {
   
   protected void createSchema(SQLiteDatabase db) throws SQLException {
     String sql = "CREATE TABLE IF NOT EXISTS schema (\n"
-            + "	user_version integer NOT NULL\n"
+            + "	user_version INTEGER NOT NULL,\n"
+            + "	created_at INTEGER,\n"
+            + "	updated_at INTEGER\n"
             + ");";
     db.execSQL(sql);
+  }
+ 
+  // user_version = " + version
+  protected void setVersion(SQLiteDatabase db, int newVersion) throws SQLException {
+    String sql = "SELECT user_version FROM schema LIMIT 1";
+    try (/*Statement stmt = db.createStatement();*/
+            ResultSet rs = db.query(sql)) {
+
+      if (rs.next()) {
+        sql = "UPDATE schema SET user_version = ?, updated_at = ?";
+        try (PreparedStatement pstmt = db.compileStatement(sql)) {
+          pstmt.setInt(1, newVersion);
+          pstmt.setLong(2, System.currentTimeMillis());
+          pstmt.executeUpdate();
+        }
+      } else {
+        sql = "INSERT INTO schema(user_version, created_at) VALUES(?,?)";
+        try (PreparedStatement pstmt = db.compileStatement(sql)) {
+          pstmt.setInt(1, newVersion);
+          pstmt.setLong(2, System.currentTimeMillis());
+          pstmt.executeUpdate();
+        }
+      }
+    }
   }
   
   // user_version
@@ -174,24 +200,6 @@ public abstract class SQLiteOpenHelper {
     try (/*Statement stmt = db.createStatement();*/
             ResultSet rs = db.query(sql)) {
       return rs.next() ? rs.getInt("user_version") : 0;
-    }
-  }
-  
-  // user_version = " + version
-  protected void setVersion(SQLiteDatabase db, int mNewVersion) throws SQLException {
-    String sql = "SELECT user_version FROM schema LIMIT 1";
-    try (/*Statement stmt = db.createStatement();*/
-            ResultSet rs = db.query(sql)) {
-
-      if (rs.next()) {
-        sql = "UPDATE schema SET user_version = ?";
-      } else {
-        sql = "INSERT INTO schema(user_version) VALUES(?)";
-      }
-      try (PreparedStatement pstmt = db.compileStatement(sql)) {
-        pstmt.setInt(1, mNewVersion);
-        pstmt.executeUpdate();
-      }
     }
   }
 
