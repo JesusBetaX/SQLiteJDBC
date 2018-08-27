@@ -217,9 +217,9 @@ public abstract class SQLiteOpenHelper {
 
   public void onOpen(SQLiteDatabase db) throws SQLException {}
 
-  public void onDowngrade(SQLiteDatabase db, int version, int mNewVersion) 
+  public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) 
   throws SQLException{}
 
-  public void onUpgrade(SQLiteDatabase db, int version, int mNewVersion) 
+  public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) 
   throws SQLException {}
 }
