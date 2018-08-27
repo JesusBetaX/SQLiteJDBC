@@ -1,10 +1,9 @@
-package sqlitejdbc;
-
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import javax.database.sqlite.SQLiteDatabase;
+import javax.database.sqlite.SQLiteOpenHelper;
 
 public class MySQLiteOpenHelper extends SQLiteOpenHelper {
 
@@ -15,7 +14,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
     super(DATABASE_NAME, DATABASE_VERSION);
   }
 
-  @Override public void onCreate(Connection db) throws SQLException {
+  @Override public void onCreate(SQLiteDatabase db) throws SQLException {
     System.out.println("sqlitejdbc.MySQLiteOpenHelper.onCreate()");
     // SQL statement for creating a new table
     String sql = "CREATE TABLE IF NOT EXISTS warehouses (\n"
@@ -23,7 +22,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
             + "	name text NOT NULL,\n"
             + "	capacity real\n"
             + ");";
-    db.createStatement().execute(sql);
+    db.execSQL(sql);
   }
 
   /**
@@ -34,8 +33,8 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
   public void selectAll() throws SQLException {
     String sql = "SELECT id, name, capacity FROM warehouses";
 
-    try (Connection conn = this.getReadableDatabase();
-            Statement stmt = conn.createStatement();
+    try (SQLiteDatabase db = this.getReadableDatabase();
+            Statement stmt = db.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
 
       // loop through the result set
@@ -57,8 +56,8 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
    */
   public int insert(String name, double capacity) throws SQLException {
     String sql = "INSERT INTO warehouses(name,capacity) VALUES(?,?)";
-    try (Connection conn = this.getWritableDatabase();
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (SQLiteDatabase db = this.getWritableDatabase();
+            PreparedStatement pstmt = db.compileStatement(sql)) {
 
       pstmt.setString(1, name);
       pstmt.setDouble(2, capacity);
@@ -80,8 +79,8 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
             + "capacity = ? "
             + "WHERE id = ?";
 
-    try (Connection conn = this.getWritableDatabase();
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (SQLiteDatabase db = this.getWritableDatabase();
+            PreparedStatement pstmt = db.compileStatement(sql)) {
 
       // set the corresponding param
       pstmt.setString(1, name);
@@ -102,8 +101,8 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
   public int delete(long id) throws SQLException {
     String sql = "DELETE FROM warehouses WHERE id = ?";
 
-    try (Connection conn = this.getWritableDatabase();
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (SQLiteDatabase db = this.getWritableDatabase();
+            PreparedStatement pstmt = db.compileStatement(sql)) {
 
       // set the corresponding param
       pstmt.setLong(1, id);

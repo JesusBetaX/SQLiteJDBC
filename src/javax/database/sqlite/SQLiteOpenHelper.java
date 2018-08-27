@@ -1,4 +1,4 @@
-package sqlitejdbc;
+package javax.database.sqlite;
 
 import java.io.File;
 import java.sql.Connection;
@@ -14,7 +14,7 @@ public abstract class SQLiteOpenHelper {
   private final String mName;
   private final int mNewVersion;
 
-  private Connection mDatabase;
+  private SQLiteDatabase mDatabase;
   private boolean mIsInitializing;
   
   public SQLiteOpenHelper(String name, int version) {
@@ -33,13 +33,13 @@ public abstract class SQLiteOpenHelper {
     return new File(getDatabasePath(), name);
   }
 
-  public Connection getWritableDatabase() throws SQLException {
+  public SQLiteDatabase getWritableDatabase() throws SQLException {
     synchronized (this) {
       return getDatabaseLocked(true);
     }
   }
 
-  public Connection getReadableDatabase() throws SQLException {
+  public SQLiteDatabase getReadableDatabase() throws SQLException {
     synchronized (this) {
       return getDatabaseLocked(false);
     }
@@ -54,7 +54,7 @@ public abstract class SQLiteOpenHelper {
    * @return
    * @throws java.sql.SQLException
    */
-  private Connection getDatabaseLocked(boolean writable) throws SQLException {
+  private SQLiteDatabase getDatabaseLocked(boolean writable) throws SQLException {
     if (mDatabase != null) {
       if (mDatabase.isClosed()) {
         // ¡Maldición! El usuario cerró la base de datos llamando a mDatabase.close ().
@@ -69,7 +69,7 @@ public abstract class SQLiteOpenHelper {
       throw new IllegalStateException("getDatabase called recursively");
     }
 
-    Connection db = mDatabase;
+    SQLiteDatabase db = mDatabase;
     try {
       mIsInitializing = true;
 
@@ -80,9 +80,9 @@ public abstract class SQLiteOpenHelper {
         }
       } else {
         try {
-          db = openDatabase(path, writable);
+          db = openOrCreateDatabase(path, writable);
         } catch (SQLException ex) {
-          db = openOrCreateDatabase(path);
+          db = openOrCreateDatabase(path, true);
         }
       }
 
@@ -95,7 +95,7 @@ public abstract class SQLiteOpenHelper {
                   + version + " to " + mNewVersion + ": " + mName);
         }
         
-        db.setAutoCommit(false); //beginTransaction();
+        db.beginTransaction();
         try {
           if (version == 0) {
             onCreate(db);
@@ -107,11 +107,11 @@ public abstract class SQLiteOpenHelper {
             }
           }
           setVersion(db, mNewVersion);
-          db.commit(); //setTransactionSuccessful();
+          db.setTransactionSuccessful();
         } catch (SQLException e) {
           db.rollback();
         } finally {
-          db.setAutoCommit(true);//endTransaction();
+          db.endTransaction();
         }
       }
 
@@ -131,41 +131,42 @@ public abstract class SQLiteOpenHelper {
     }
   }
   
-  private Connection reopenReadWrite(File path, Connection db) throws SQLException {
+  private SQLiteDatabase reopenReadWrite(File path, SQLiteDatabase db) throws SQLException {
     synchronized(this) {
       if (!db.isReadOnly()) {
         return db; // nothing to do
       }
       db.close();
-      return openDatabase(path, true);
+      return openOrCreateDatabase(path, true);
     }
   }
   
-  private Connection openDatabase(File path, boolean writable) throws SQLException {
-    SQLiteConfig config = new SQLiteConfig();
-    config.setReadOnly(!writable);
-    return config.createConnection("jdbc:sqlite:" + path.getPath());
-  }
-  
-  private Connection openOrCreateDatabase(File path) throws SQLException {
+
+  private SQLiteDatabase openOrCreateDatabase(File path, boolean writable) throws SQLException {
     File parent = path.getParentFile();
     if (parent != null && !parent.exists()) {
       parent.mkdirs();
     }
     
+    boolean existsDb = path.exists();
+    
     SQLiteConfig config = new SQLiteConfig();
+    config.setReadOnly(!writable);
     Connection conn = config.createConnection("jdbc:sqlite:" + path.getPath());
+    SQLiteDatabase db = new SQLiteDatabase(conn);
     
-    String sql = "CREATE TABLE IF NOT EXISTS schema (\n"
-            + "	user_version integer NOT NULL\n"
-            + ");";
-    conn.createStatement().execute(sql);
+    if (!existsDb) {
+      String sql = "CREATE TABLE IF NOT EXISTS schema (\n"
+              + "	user_version integer NOT NULL\n"
+              + ");";
+      db.execSQL(sql);
+    }
     
-    return conn;
+    return db;
   }
   
   // user_version
-  private int getVersion(Connection db) throws SQLException {
+  private int getVersion(SQLiteDatabase db) throws SQLException {
     String sql = "SELECT user_version FROM schema LIMIT 1";
     try (Statement stmt = db.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
@@ -174,7 +175,7 @@ public abstract class SQLiteOpenHelper {
   }
   
   // user_version = " + version
-  private void setVersion(Connection db, int mNewVersion) throws SQLException {
+  private void setVersion(SQLiteDatabase db, int mNewVersion) throws SQLException {
     String sql = "SELECT user_version FROM schema LIMIT 1";
     try (Statement stmt = db.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
@@ -184,7 +185,7 @@ public abstract class SQLiteOpenHelper {
       } else {
         sql = "INSERT INTO schema(user_version) VALUES(?)";
       }
-      try (PreparedStatement pstmt = db.prepareStatement(sql)) {
+      try (PreparedStatement pstmt = db.compileStatement(sql)) {
         pstmt.setInt(1, mNewVersion);
         pstmt.executeUpdate();
       }
@@ -207,15 +208,15 @@ public abstract class SQLiteOpenHelper {
     }
   }
   
-  public void onConfigure(Connection db) throws SQLException {}
+  public void onConfigure(SQLiteDatabase db) throws SQLException {}
 
-  public abstract void onCreate(Connection db) throws SQLException;
+  public abstract void onCreate(SQLiteDatabase db) throws SQLException;
 
-  public void onOpen(Connection db) throws SQLException {}
+  public void onOpen(SQLiteDatabase db) throws SQLException {}
 
-  public void onDowngrade(Connection db, int version, int mNewVersion) 
+  public void onDowngrade(SQLiteDatabase db, int version, int mNewVersion) 
   throws SQLException{}
 
-  public void onUpgrade(Connection db, int version, int mNewVersion) 
+  public void onUpgrade(SQLiteDatabase db, int version, int mNewVersion) 
   throws SQLException {}
 }
