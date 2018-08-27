@@ -69,8 +69,8 @@ public class SQLiteDatabase implements AutoCloseable {
   public ResultSet query(String sql) throws SQLException {
     Statement statement = null;
     try {
-      statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, 
-              ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);
+      statement = conn.createStatement(/*ResultSet.TYPE_FORWARD_ONLY, 
+              ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT*/);
       return new SQLiteResultSet(statement.executeQuery(sql), statement);
     } catch (SQLException e) {
       closeQuietly(statement);
@@ -80,8 +80,8 @@ public class SQLiteDatabase implements AutoCloseable {
   public ResultSet query(String sql, Object... bindArgs) throws SQLException {
     PreparedStatement statement = null;
     try {
-      statement = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, 
-              ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);
+      statement = conn.prepareStatement(sql/*, ResultSet.TYPE_FORWARD_ONLY, 
+              ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT*/);
       prepareBind(statement, bindArgs);
       return new SQLiteResultSet(statement.executeQuery(), statement);
     } catch (SQLException e) {
