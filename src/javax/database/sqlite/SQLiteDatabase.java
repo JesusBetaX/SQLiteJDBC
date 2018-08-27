@@ -90,15 +90,15 @@ public class SQLiteDatabase implements AutoCloseable {
     }
   }
 
-  public boolean execSQL(String sql) throws SQLException {
+  public void execSQL(String sql) throws SQLException {
     try (Statement statement = createStatement()) {
-      return statement.execute(sql);
+      statement.execute(sql);
     }
   }
-  public boolean execSQL(String sql, Object... bindArgs) throws SQLException {
+  public void execSQL(String sql, Object... bindArgs) throws SQLException {
     try (PreparedStatement statement = compileStatement(sql)) {
       prepareBind(statement, bindArgs);
-      return statement.execute();
+      statement.execute();
     }
   }
 
@@ -132,7 +132,7 @@ public class SQLiteDatabase implements AutoCloseable {
     try (PreparedStatement ps = conn.prepareStatement(sql,
                     Statement.RETURN_GENERATED_KEYS)) {
       prepareBind(ps, bindArgs);
-      if (ps.execute()) {
+      if (ps.executeUpdate() > 0) {
         // obtengo las ultimas llaves generadas
         try (ResultSet rs = ps.getGeneratedKeys()) {
           // retorna la llave.
