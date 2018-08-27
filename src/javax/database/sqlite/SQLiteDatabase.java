@@ -151,9 +151,9 @@ public class SQLiteDatabase implements AutoCloseable {
    * @param initialValues contiene los valores de columna iniciales para la fila.
    * Las claves deben ser los nombres de las columnas y los valores valores de
    * la columna
-   * @param conflictAlgorithm
+   * @param conflictAlgorithm  OR ROLLBACK, OR ABORT, OR FAIL, OR IGNORE, OR REPLACE
    *
-   * @return el ID de la fila reci�n insertada, o -1 si se produjo un error
+   * @return el ID de la fila recién insertada, o -1 si se produjo un error
    *
    * @throws SQLException
    */
