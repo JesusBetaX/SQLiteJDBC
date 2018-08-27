@@ -168,8 +168,8 @@ public abstract class SQLiteOpenHelper {
   // user_version
   private int getVersion(SQLiteDatabase db) throws SQLException {
     String sql = "SELECT user_version FROM schema LIMIT 1";
-    try (Statement stmt = db.createStatement();
-            ResultSet rs = stmt.executeQuery(sql)) {
+    try (/*Statement stmt = db.createStatement();*/
+            ResultSet rs = db.query(sql)) {
       return rs.next() ? rs.getInt("user_version") : 0;
     }
   }
@@ -177,8 +177,8 @@ public abstract class SQLiteOpenHelper {
   // user_version = " + version
   private void setVersion(SQLiteDatabase db, int mNewVersion) throws SQLException {
     String sql = "SELECT user_version FROM schema LIMIT 1";
-    try (Statement stmt = db.createStatement();
-            ResultSet rs = stmt.executeQuery(sql)) {
+    try (/*Statement stmt = db.createStatement();*/
+            ResultSet rs = db.query(sql)) {
 
       if (rs.next()) {
         sql = "UPDATE schema SET user_version = ?";
