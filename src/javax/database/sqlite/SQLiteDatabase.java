@@ -224,7 +224,7 @@ public class SQLiteDatabase implements AutoCloseable {
    * @throws SQLException
    */
   public int update(String table, Map<String, Object> values,
-          String whereClause, String... whereArgs) throws SQLException {
+          String whereClause, Object... whereArgs) throws SQLException {
     StringBuilder sql = new StringBuilder();
     sql.append("UPDATE ");
     sql.append(table);
@@ -255,6 +255,15 @@ public class SQLiteDatabase implements AutoCloseable {
     return executeUpdate(sql.toString(), bindArgs);
   }
 
+  public long upsert(String table, Map<String, Object> values,
+          String whereClause, Object... whereArgs) throws SQLException {
+    int rows = update(table, values, whereClause, whereArgs);
+    if (rows > 0) {
+      return rows;
+    }
+    return insertWithOnConflict(table, values, "OR IGNORE");
+  }
+  
   /**
    * Elimina un registro de la base de datos.
    *
