@@ -224,7 +224,7 @@ public class SQLiteDatabase implements AutoCloseable {
    * @throws SQLException
    */
   public int update(String table, Map<String, Object> values,
-          String whereClause, String[] whereArgs) throws SQLException {
+          String whereClause, String... whereArgs) throws SQLException {
     StringBuilder sql = new StringBuilder();
     sql.append("UPDATE ");
     sql.append(table);
