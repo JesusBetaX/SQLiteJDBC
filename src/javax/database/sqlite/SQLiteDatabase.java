@@ -143,7 +143,7 @@ public class SQLiteDatabase implements AutoCloseable {
       }
     }
   }
-
+  
   /**
    * Inserta un registro en la base de datos.
    *
@@ -184,12 +184,24 @@ public class SQLiteDatabase implements AutoCloseable {
     return insertAndGetId(sql.toString(), bindArgs);
   }
   
-  public long insert(String table, Map<String, Object> initialValues) 
+  public long insert(String table, Map<String, Object> initialValues)
           throws SQLException {
     return insertWithOnConflict(table, initialValues, "");
   }
-  
-  public long repleace(String table, Map<String, Object> initialValues) 
+
+  /**
+   * Cuando se produce una violación de restricción UNIQUE o PRIMARY KEY, 
+   * la REPLACE declaración:
+   * 
+   * ° Primero, elimina la fila existente que causa la violación de restricción.
+   * ° Segundo, inserta una nueva fila.
+   * 
+   * @param table nombre de la tabla.
+   * @param initialValues valore del replece.
+   * @return
+   * @throws SQLException 
+   */
+  public long repleace(String table, Map<String, Object> initialValues)
           throws SQLException {
     return insertWithOnConflict(table, initialValues, "OR REPLACE");
   }
@@ -265,7 +277,28 @@ public class SQLiteDatabase implements AutoCloseable {
     }
     return executeUpdate(sql, whereArgs);
   }
-
+  
+  /**
+   * Obtiene la versión de la base de datos.
+   *
+   * @return la versión de la base de datos
+   */
+  public int getVersion(SQLiteDatabase db) throws SQLException {
+    try (Statement stmt = db.createStatement();
+            ResultSet rs = stmt.executeQuery("PRAGMA user_version")) {
+      return rs.getInt(1);
+    }
+  }
+  
+  /**
+   * Establece la versión de la base de datos.
+   *
+   * @param version la nueva versión de la base de datos
+   */
+  public void setVersion(SQLiteDatabase db, int version) throws SQLException {
+    execSQL("PRAGMA user_version = " + version);
+  }
+  
   public boolean isClosed() throws SQLException {
     return conn.isClosed();
   }
