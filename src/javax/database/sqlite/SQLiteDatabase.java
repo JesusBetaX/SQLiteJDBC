@@ -255,13 +255,14 @@ public class SQLiteDatabase implements AutoCloseable {
     return executeUpdate(sql.toString(), bindArgs);
   }
 
-  public long upsert(String table, Map<String, Object> values,
+  public CreateOrUpdateStatus upsert(String table, Map<String, Object> values,
           String whereClause, Object... whereArgs) throws SQLException {
     int rows = update(table, values, whereClause, whereArgs);
     if (rows > 0) {
-      return rows;
+      return CreateOrUpdateStatus.createStatusUpdate(rows);
     }
-    return insertWithOnConflict(table, values, "OR IGNORE");
+    long insertId = insertWithOnConflict(table, values, "OR IGNORE");
+    return CreateOrUpdateStatus.createStatusInsert(insertId);
   }
   
   /**
