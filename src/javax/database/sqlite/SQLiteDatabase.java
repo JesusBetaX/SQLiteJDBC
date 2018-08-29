@@ -262,7 +262,7 @@ public class SQLiteDatabase implements AutoCloseable {
       return new CreateOrUpdateStatus(Boolean.FALSE, Boolean.TRUE, rows, -1);
     }
     long insertId = insertWithOnConflict(table, values, "OR IGNORE");
-    if (insertId > 0) {
+    if (insertId > -1) {
       return new CreateOrUpdateStatus(Boolean.TRUE, Boolean.FALSE, -1, insertId);
     }
     return new CreateOrUpdateStatus(Boolean.FALSE, Boolean.FALSE, -1, -1);
