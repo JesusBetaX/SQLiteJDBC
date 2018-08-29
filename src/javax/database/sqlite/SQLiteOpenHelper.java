@@ -32,13 +32,13 @@ public abstract class SQLiteOpenHelper {
 
   public SQLiteDatabase getWritableDatabase() throws SQLException {
     synchronized (this) {
-      return getDatabaseLocked(true);
+      return getDatabaseLocked(Boolean.TRUE);
     }
   }
 
   public SQLiteDatabase getReadableDatabase() throws SQLException {
     synchronized (this) {
-      return getDatabaseLocked(false);
+      return getDatabaseLocked(Boolean.FALSE);
     }
   }
 
@@ -79,7 +79,7 @@ public abstract class SQLiteOpenHelper {
         try {
           db = openOrCreateDatabase(path, writable);
         } catch (SQLException ex) {
-          db = openOrCreateDatabase(path, true);
+          db = openOrCreateDatabase(path, Boolean.TRUE);
         }
       }
 
@@ -121,7 +121,7 @@ public abstract class SQLiteOpenHelper {
       mDatabase = db;
       return db;
     } finally {
-      mIsInitializing = false;
+      mIsInitializing = Boolean.FALSE;
       if (db != null && db != mDatabase) {
         db.close();
       }
@@ -134,7 +134,7 @@ public abstract class SQLiteOpenHelper {
         return db; // nothing to do
       }
       db.close();
-      return openOrCreateDatabase(path, true);
+      return openOrCreateDatabase(path, Boolean.TRUE);
     }
   }
   

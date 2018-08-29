@@ -259,10 +259,10 @@ public class SQLiteDatabase implements AutoCloseable {
           String whereClause, Object... whereArgs) throws SQLException {
     int rows = update(table, values, whereClause, whereArgs);
     if (rows > 0) {
-      return CreateOrUpdateStatus.createStatusUpdate(rows);
+      return new CreateOrUpdateStatus(Boolean.FALSE, Boolean.TRUE, rows, -1);
     }
     long insertId = insertWithOnConflict(table, values, "OR IGNORE");
-    return CreateOrUpdateStatus.createStatusInsert(insertId);
+    return new CreateOrUpdateStatus(Boolean.TRUE, Boolean.FALSE, -1, insertId);
   }
   
   /**
@@ -318,7 +318,7 @@ public class SQLiteDatabase implements AutoCloseable {
   }
 
   public void beginTransaction() throws SQLException {
-    conn.setAutoCommit(false); 
+    conn.setAutoCommit(Boolean.FALSE); 
   }
 
   public void setTransactionSuccessful() throws SQLException {
@@ -326,7 +326,7 @@ public class SQLiteDatabase implements AutoCloseable {
   }
 
   public void endTransaction() throws SQLException {
-    conn.setAutoCommit(true);
+    conn.setAutoCommit(Boolean.TRUE);
   }
 
   public void rollback() throws SQLException {

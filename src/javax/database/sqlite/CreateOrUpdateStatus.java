@@ -14,13 +14,6 @@ public class CreateOrUpdateStatus {
     this.insertId = insertId;
   }
   
-  public static CreateOrUpdateStatus createStatusUpdate(int numberLinesChanged) {
-    return new CreateOrUpdateStatus(Boolean.FALSE, Boolean.TRUE, numberLinesChanged, -1);
-  }
-  public static CreateOrUpdateStatus createStatusInsert(long insertId) {
-    return new CreateOrUpdateStatus(Boolean.TRUE, Boolean.FALSE, -1, insertId);
-  }
-
   public boolean isCreated() {
     return created;
   }
