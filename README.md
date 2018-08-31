@@ -4,11 +4,6 @@ JavaSQLite
 Conéctese a la base de datos SQLite con el controlador SQLite JDBC
 
 
-Descargar
---------
-
-Download [the latest JAR][2] or grab via Maven:
-
 License
 =======
 
