@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Map;
 
 public class SQLiteDatabase implements AutoCloseable {
@@ -72,7 +73,9 @@ public class SQLiteDatabase implements AutoCloseable {
     try {
       statement = conn.createStatement(/*ResultSet.TYPE_FORWARD_ONLY, 
               ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT*/);
-      return new SQLiteResultSet(statement.executeQuery(sql), statement);
+      ResultSet resultSet = statement.executeQuery(sql);
+      Log.i(TAG, sql);
+      return new SQLiteResultSet(resultSet, statement);
     } catch (SQLException e) {
       closeQuietly(statement);
       throw e;
@@ -84,7 +87,9 @@ public class SQLiteDatabase implements AutoCloseable {
       statement = conn.prepareStatement(sql/*, ResultSet.TYPE_FORWARD_ONLY, 
               ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT*/);
       prepareBind(statement, bindArgs);
-      return new SQLiteResultSet(statement.executeQuery(), statement);
+      ResultSet resultSet = statement.executeQuery();
+      Log.i(TAG, sql + " " + Arrays.toString(bindArgs));
+      return new SQLiteResultSet(resultSet, statement);
     } catch (SQLException e) {
       closeQuietly(statement);
       throw e;
@@ -114,7 +119,9 @@ public class SQLiteDatabase implements AutoCloseable {
   public int executeUpdate(String sql, Object... bindArgs) throws SQLException {
     try (PreparedStatement statement = compileStatement(sql)) {
       prepareBind(statement, bindArgs);
-      return statement.executeUpdate();
+      int rows = statement.executeUpdate();
+      Log.i(TAG, sql + " " + Arrays.toString(bindArgs));
+      return rows;
     }
   }
 
@@ -134,6 +141,7 @@ public class SQLiteDatabase implements AutoCloseable {
                     Statement.RETURN_GENERATED_KEYS)) {
       prepareBind(ps, bindArgs);
       if (ps.executeUpdate() > 0) {
+        Log.i(TAG, sql + " " + Arrays.toString(bindArgs));
         // obtengo las ultimas llaves generadas
         try (ResultSet rs = ps.getGeneratedKeys()) {
           // retorna la llave.
