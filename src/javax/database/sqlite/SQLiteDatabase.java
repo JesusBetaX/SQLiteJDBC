@@ -245,6 +245,8 @@ public class SQLiteDatabase implements AutoCloseable {
           Object... whereArgs) throws SQLException {
     StringBuilder sql = new StringBuilder();
     sql.append("UPDATE ");
+    sql.append(conflictAlgorithm);
+    sql.append(" ");
     sql.append(table);
     sql.append(" SET ");
 
