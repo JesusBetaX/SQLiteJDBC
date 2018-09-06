@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.Map;
 
 public class SQLiteDatabase implements AutoCloseable {
+  private static final String TAG = "SQLiteDatabase";
 
   private final Connection conn;
   
@@ -184,9 +185,13 @@ public class SQLiteDatabase implements AutoCloseable {
     return insertAndGetId(sql.toString(), bindArgs);
   }
   
-  public long insert(String table, Map<String, Object> initialValues)
-          throws SQLException {
-    return insertWithOnConflict(table, initialValues, "");
+  public long insert(String table, Map<String, Object> values) {
+    try {
+      return insertWithOnConflict(table, values, "");
+    } catch(SQLException e) {
+      Log.e(TAG, "Error inserting " + values, e);
+      return -1;
+    }
   }
 
   /**
@@ -197,13 +202,16 @@ public class SQLiteDatabase implements AutoCloseable {
    * ° Segundo, inserta una nueva fila.
    * 
    * @param table nombre de la tabla.
-   * @param initialValues valore del replece.
+   * @param values valore del replece.
    * @return
-   * @throws SQLException 
    */
-  public long repleace(String table, Map<String, Object> initialValues)
-          throws SQLException {
-    return insertWithOnConflict(table, initialValues, "OR REPLACE");
+  public long repleace(String table, Map<String, Object> values) {
+    try {
+      return insertWithOnConflict(table, values, "OR REPLACE");
+    } catch(SQLException e) {
+      Log.e(TAG, "Error inserting " + values, e);
+      return -1;
+    }
   }
 
   /**
@@ -213,6 +221,7 @@ public class SQLiteDatabase implements AutoCloseable {
    * @param values contiene los valores de columna iniciales para la fila.
    * Las claves deben ser los nombres de las columnas y los valores valores de
    * la columna.
+   * @param conflictAlgorithm
    * @param whereClause [opcional] cláusula WHERE para aplicar al actualizar.
    * Pasar null actualizará todas las filas.
    * @param whereArgs [opcional] Puede incluirse en la cláusula WHERE, que será
@@ -223,8 +232,9 @@ public class SQLiteDatabase implements AutoCloseable {
    *
    * @throws SQLException
    */
-  public int update(String table, Map<String, Object> values,
-          String whereClause, Object... whereArgs) throws SQLException {
+  public int updateWithOnConflict(String table, Map<String, Object> values,
+          String conflictAlgorithm, String whereClause, 
+          Object... whereArgs) throws SQLException {
     StringBuilder sql = new StringBuilder();
     sql.append("UPDATE ");
     sql.append(table);
@@ -254,18 +264,33 @@ public class SQLiteDatabase implements AutoCloseable {
 
     return executeUpdate(sql.toString(), bindArgs);
   }
+  
+  public int update(String table,  Map<String, Object> values, 
+          String whereClause, Object... whereArgs) {
+    try {
+      return updateWithOnConflict(table, values, "", whereClause, whereArgs);
+    } catch (SQLException e) {
+      Log.e(TAG, "Error updating " + values, e);
+      return -1;
+    }
+  }
 
   public CreateOrUpdateStatus upsert(String table, Map<String, Object> values,
-          String whereClause, Object... whereArgs) throws SQLException {
-    int rows = update(table, values, whereClause, whereArgs);
-    if (rows > 0) {
-      return new CreateOrUpdateStatus(Boolean.FALSE, Boolean.TRUE, rows, -1);
+          String whereClause, Object... whereArgs) {
+    try {
+      int rows = update(table, values, whereClause, whereArgs);
+      if (rows > 0) {
+        return new CreateOrUpdateStatus(Boolean.FALSE, Boolean.TRUE, rows, -1);
+      }
+      long insertId = insertWithOnConflict(table, values, "OR IGNORE");
+      if (insertId > -1) {
+        return new CreateOrUpdateStatus(Boolean.TRUE, Boolean.FALSE, -1, insertId);
+      }
+      return new CreateOrUpdateStatus(Boolean.FALSE, Boolean.FALSE, -1, -1);
+    } catch(SQLException e) {
+      Log.e(TAG, "Error upsert " + values, e);
+      return new CreateOrUpdateStatus(Boolean.FALSE, Boolean.FALSE, -1, -1);
     }
-    long insertId = insertWithOnConflict(table, values, "OR IGNORE");
-    if (insertId > -1) {
-      return new CreateOrUpdateStatus(Boolean.TRUE, Boolean.FALSE, -1, insertId);
-    }
-    return new CreateOrUpdateStatus(Boolean.FALSE, Boolean.FALSE, -1, -1);
   }
   
   /**

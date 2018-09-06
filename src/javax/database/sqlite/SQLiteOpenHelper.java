@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import org.sqlite.SQLiteConfig;
 
 public abstract class SQLiteOpenHelper {
+  private static final String TAG = SQLiteOpenHelper.class.getSimpleName();
 
   private final File mFolder;
   private final String mName;
@@ -115,7 +116,7 @@ public abstract class SQLiteOpenHelper {
       onOpen(db);
 
       if (db.isReadOnly()) {
-        System.out.println("Opened " + mName + " in read-only mode");
+        Log.i(TAG, "Opened " + mName + " in read-only mode");
       }
 
       mDatabase = db;
