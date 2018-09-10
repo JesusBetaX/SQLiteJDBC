@@ -3,7 +3,7 @@ JavaSQLite
 
 Conéctese a la base de datos SQLite con el controlador SQLite JDBC
 
-´´´
+```
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -123,7 +123,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
     dbHelper.selectAll();
   }
 }
-´´´
+```
 
 License
 =======
