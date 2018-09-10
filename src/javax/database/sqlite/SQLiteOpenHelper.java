@@ -143,6 +143,7 @@ public abstract class SQLiteOpenHelper {
     File parent = path.getParentFile();
     if (parent != null && !parent.exists()) {
       parent.mkdirs();
+      Log.i(TAG, "Directory '" + path + "' created");
     }
     
     SQLiteConfig config = new SQLiteConfig();
