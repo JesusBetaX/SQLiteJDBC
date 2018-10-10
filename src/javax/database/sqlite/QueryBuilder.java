@@ -4,14 +4,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public class QueryBuilder {
 
   private final SQLiteDatabase db;
-  private String table;
   private boolean distinct = false;
-  private List<Object> columns = new ArrayList();
+  private List<Object> columns;
+  private String table;
+  private LinkedHashSet<String> joins;
   private String whereClause;
   private Object[] whereArgs;
   private String groupBy;
@@ -31,7 +33,7 @@ public class QueryBuilder {
   
   /** Atributos de seleccion de la consulta. */
   public QueryBuilder select(String... fields) {
-    this.columns.clear();
+    this.columns = new ArrayList<Object>();
     this.columns.addAll(Arrays.asList(fields));
     return this;
   }
@@ -39,6 +41,40 @@ public class QueryBuilder {
   /** Define el nombre de la tabla. */
   public QueryBuilder from(String table) {
     this.table = table;
+    return this;
+  }
+  
+  /**
+   * Genera la parte JOIN de la consulta
+   * 
+   * @param table table t2
+   * @param condition t1.field = t2.field
+   * @return 
+   */
+  public QueryBuilder join(String table, String condition) {
+    return join(table, condition, null);
+  }
+
+  /**
+   * Genera la parte JOIN de la consulta
+   * 
+   * @param table table t2
+   * @param condition t1.field = t2.field
+   * @param type left, inner
+   * @return 
+   */
+  public QueryBuilder join(String table, String condition, String type/*LEFT*/) {
+    final StringBuilder join = new StringBuilder();
+    if (type != null) join.append(type).append(" ");
+    join.append("JOIN ")
+      .append(table.trim())
+      .append(" ON ")
+      .append(condition.trim())
+    ;
+    if (this.joins == null) {
+      this.joins = new LinkedHashSet<String>();
+    }
+    this.joins.add(join.toString());
     return this;
   }
   
@@ -87,17 +123,22 @@ public class QueryBuilder {
   @Override public String toString() {
     StringBuilder query = new StringBuilder();
     query.append("SELECT ");
-    if (distinct) query.append("DISTINCT ");
-    if (columns.isEmpty()) {
-      query.append("*");
-    } else {
+    if (this.distinct) query.append("DISTINCT ");
+    if (this.columns != null && !this.columns.isEmpty()) {
       for (int i = 0; i < this.columns.size(); i++) {
         if (i > 0) query.append(',');
         query.append(this.columns.get(i));
       }
+    } else {
+      query.append("*");
     }
     query.append(" FROM ");
     query.append(this.table);
+    if (this.joins != null && !this.joins.isEmpty()) {
+       for (String join : this.joins) {
+        appendClause(query, " ", join);
+      }
+    }
     appendClause(query, " WHERE ", this.whereClause);
     appendClause(query, " GROUP BY ", this.groupBy);
     appendClause(query, " HAVING ", this.having);
