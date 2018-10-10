@@ -347,6 +347,23 @@ public class SQLiteDatabase implements AutoCloseable {
     execSQL("PRAGMA user_version = " + version);
   }
   
+  /** Obtiene un valor numerico segun el query que se forme con los parametros. */
+  public long getLong(String campo, String tabla, String where, Object... vars)
+  throws SQLException {
+    StringBuilder sql = new StringBuilder()
+            .append("SELECT ")
+            .append(campo)
+            .append(" FROM ")
+            .append(tabla)
+            .append(" ");
+    if (where != null && !where.isEmpty()) {
+      sql.append("\tWHERE ").append(where);
+    }
+    try (ResultSet rs = query(sql.toString(), vars)) {
+      return rs.next() ? rs.getLong(1) : -1;
+    }
+  }
+  
   public boolean isClosed() throws SQLException {
     return conn.isClosed();
   }
