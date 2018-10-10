@@ -3,6 +3,7 @@ package javax.database.sqlite;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class QueryBuilder {
@@ -22,7 +23,7 @@ public class QueryBuilder {
     this.db = db;
   }
   
-  /** Método que permite forzar la consulta para devolver resultados distintos. */
+  /** Permite forzar la consulta para devolver resultados distintos. */
   public QueryBuilder distinct() {
     this.distinct = true;
     return this;
@@ -31,17 +32,23 @@ public class QueryBuilder {
   /** Atributos de seleccion de la consulta. */
   public QueryBuilder select(String... fields) {
     this.columns.clear();
-    for (String field : fields) {
-      this.columns.add(field);
-    }
+    this.columns.addAll(Arrays.asList(fields));
     return this;
   }
   
+  /** Define el nombre de la tabla. */
   public QueryBuilder from(String table) {
     this.table = table;
     return this;
   }
   
+  /**
+   * Clausula where 
+   * 
+   * @param whereClause condicion
+   * @param whereArgs [opcional] parametros del whereClause
+   * @return this
+   */
   public QueryBuilder where(String whereClause, Object... whereArgs) {
     this.whereClause = whereClause;
     this.whereArgs = whereArgs;
@@ -68,6 +75,7 @@ public class QueryBuilder {
     return this;
   }
 
+  /** Construye y ejecuta el query. */
   public ResultSet get() throws SQLException {
     if (this.whereArgs != null)
       return this.db.query(toString(), this.whereArgs);
@@ -75,6 +83,7 @@ public class QueryBuilder {
       return this.db.query(toString());
   }
 
+  /** Compilamos el query. */
   @Override public String toString() {
     StringBuilder query = new StringBuilder();
     query.append("SELECT ");
