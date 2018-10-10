@@ -14,8 +14,7 @@ public class QueryBuilder {
   private List<Object> columns;
   private String table;
   private LinkedHashSet<String> joins;
-  private String whereClause;
-  private Object[] whereArgs;
+  private Where where;
   private String groupBy;
   private String having;
   private String orderBy;
@@ -78,17 +77,14 @@ public class QueryBuilder {
     return this;
   }
   
-  /**
-   * Clausula where 
-   * 
-   * @param whereClause condicion
-   * @param whereArgs [opcional] parametros del whereClause
-   * @return this
-   */
-  public QueryBuilder where(String whereClause, Object... whereArgs) {
-    this.whereClause = whereClause;
-    this.whereArgs = whereArgs;
-    return this;
+  /** Clausula where. */
+  public Where where(Where where) {
+    return this.where = where;
+  }
+  public Where where() {
+    if (this.where == null) 
+      this.where(new Where(this));
+    return this.where;
   }
   
   public QueryBuilder groupBy(String groupBy) {
@@ -113,10 +109,7 @@ public class QueryBuilder {
 
   /** Construye y ejecuta el query. */
   public ResultSet get() throws SQLException {
-    if (this.whereArgs != null)
-      return this.db.query(toString(), this.whereArgs);
-    else
-      return this.db.query(toString());
+    return this.db.query(toString());
   }
 
   /** Compilamos el query. */
@@ -139,7 +132,7 @@ public class QueryBuilder {
         appendClause(query, " ", join);
       }
     }
-    appendClause(query, " WHERE ", this.whereClause);
+    appendClause(query, " WHERE ", this.where);
     appendClause(query, " GROUP BY ", this.groupBy);
     appendClause(query, " HAVING ", this.having);
     appendClause(query, " ORDER BY ", this.orderBy);
@@ -151,6 +144,124 @@ public class QueryBuilder {
     if (clause != null && !clause.isEmpty()) {
       s.append(name);
       s.append(clause);
+    }
+  }
+  private static void appendClause(StringBuilder s, String name, Object clause) {
+    if (clause != null) appendClause(s, name, clause.toString());
+  }
+  
+  public static class Where {
+    private final QueryBuilder qs;
+    private final StringBuilder sql = new StringBuilder();
+    private int countClauses = 0;
+    
+    public Where(QueryBuilder querySelect) {
+      qs = querySelect;
+    }
+    
+    public Where and() {
+      if (countClauses > 0) {
+        sql.append("\nAND");
+      }
+      return this;
+    }
+    
+    public Where or() {
+      if (countClauses > 0) {
+        sql.append("\nOR");
+      }
+      return this;
+    }
+    
+    public Where not() {
+      sql.append(" NOT");
+      return this;
+    }
+
+    public Where clause(String columnName, String op, Object value) {
+      sql.append(" ")
+         .append(columnName.trim())
+         .append(" ").append(op.trim()).append(" ")
+         .append(toValue(value))
+      ;
+      countClauses++;
+      return this;
+    }
+    
+    public Where like(String columnName, Object value) {
+      return clause(columnName, "LIKE", value);
+    }
+    
+    public Where between(String columnName, Object low, Object high) {
+      sql.append(" ")
+         .append(columnName)
+         .append(" BETWEEN ")
+         .append(toValue(low))
+         .append(" AND ")
+         .append(toValue(high))
+      ;
+      countClauses++;
+      return this;
+    }
+    
+    public Where in(String columnName, Object... values) {
+      sql.append(" ");
+      sql.append(columnName);
+      sql.append(" IN (");
+      for (int i = 0; i < values.length; i++) {
+        if (i > 0) sql.append(", ");
+        sql.append(toValue(values[i]));
+      }
+      sql.append(")");
+      countClauses++;
+      return this;
+    }
+    
+    public Where in(String columnName, QueryBuilder qs) {
+      sql.append(" ")
+         .append(columnName)
+         .append(" IN (\n")
+         .append(qs.toString())
+         .append("\n)")
+      ;
+      countClauses++;
+      return this;
+    }
+    
+    public Where exists(QueryBuilder qs) {
+      // EXISTS (SELECT * FROM `producto` WHERE `id` = 0 )
+      sql.append(" EXISTS (\n")
+         .append(qs.toString())
+         .append("\n)")
+      ;
+      countClauses++;
+      return this;
+    }
+    
+    public Where str(String str) {
+      sql.append(str);
+      return this;
+    }
+    
+    public QueryBuilder endWhere() {
+      return qs;
+    }
+    
+    @Override public String toString() {
+      return sql.toString();
+    }
+    
+    public static String toValue(Object value) {
+      if (value == null) {
+        return "NULL ";
+      } else {
+        String newValue = value.toString().replace("'", "\\'");
+        return new StringBuilder(newValue.length() + 2)
+                .append('\'')
+                .append(newValue)
+                .append('\'')
+                .toString();
+      }
     }
   }
 }
