@@ -1,11 +1,9 @@
 package javax.database.sqlite;
 
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.database.sqlite.SQLiteDatabase;
 
 public class QueryBuilder {
 
