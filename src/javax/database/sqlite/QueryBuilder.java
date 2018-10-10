@@ -161,14 +161,14 @@ public class QueryBuilder {
     
     public Where and() {
       if (countClauses > 0) {
-        sql.append("\nAND");
+        sql.append(" AND");
       }
       return this;
     }
     
     public Where or() {
       if (countClauses > 0) {
-        sql.append("\nOR");
+        sql.append(" OR");
       }
       return this;
     }
@@ -220,9 +220,9 @@ public class QueryBuilder {
     public Where in(String columnName, QueryBuilder qs) {
       sql.append(" ")
          .append(columnName)
-         .append(" IN (\n")
+         .append(" IN (")
          .append(qs.toString())
-         .append("\n)")
+         .append(")")
       ;
       countClauses++;
       return this;
@@ -230,9 +230,9 @@ public class QueryBuilder {
     
     public Where exists(QueryBuilder qs) {
       // EXISTS (SELECT * FROM `producto` WHERE `id` = 0 )
-      sql.append(" EXISTS (\n")
+      sql.append(" EXISTS (")
          .append(qs.toString())
-         .append("\n)")
+         .append(")")
       ;
       countClauses++;
       return this;
