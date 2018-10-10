@@ -364,6 +364,11 @@ public class SQLiteDatabase implements AutoCloseable {
     }
   }
   
+  /** Obtiene un constructor de quierys. */
+  public QueryBuilder table(String table) {
+    return new QueryBuilder(this).from(table);
+  }
+  
   public boolean isClosed() throws SQLException {
     return conn.isClosed();
   }
