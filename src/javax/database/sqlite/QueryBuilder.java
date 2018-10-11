@@ -9,10 +9,11 @@ import java.util.List;
 
 public class QueryBuilder {
 
-  private final SQLiteDatabase db;
+  private SQLiteDatabase db;
   private boolean distinct = false;
   private List<Object> columns;
   private String table;
+  private QueryBuilder from;
   private LinkedHashSet<String> joins;
   private Where where;
   private String groupBy;
@@ -20,6 +21,9 @@ public class QueryBuilder {
   private String orderBy;
   private String limit;
 
+  public QueryBuilder() {
+    this(null);
+  }
   public QueryBuilder(SQLiteDatabase db) {
     this.db = db;
   }
@@ -39,7 +43,19 @@ public class QueryBuilder {
   
   /** Define el nombre de la tabla. */
   public QueryBuilder from(String table) {
-    this.table = table;
+    return from(table, null);
+  }
+  
+  /**
+   * Genera la parte FROM de la consulta.
+   * 
+   * @param as nombre de alias
+   * @param from subQuery
+   * @return 
+   */
+  public QueryBuilder from(String as, QueryBuilder from) {
+    this.table = as;
+    this.from = from;
     return this;
   }
   
@@ -53,7 +69,12 @@ public class QueryBuilder {
   public QueryBuilder join(String table, String condition) {
     return join(table, condition, null);
   }
-
+  public QueryBuilder leftJoin(String table, String condition) {
+    return join(table, condition, "LEFT");
+  }
+  public QueryBuilder innerJoin(String table, String condition) {
+    return join(table, condition, "INNER");
+  }
   /**
    * Genera la parte JOIN de la consulta
    * 
@@ -65,11 +86,11 @@ public class QueryBuilder {
   public QueryBuilder join(String table, String condition, String type/*LEFT*/) {
     final StringBuilder join = new StringBuilder();
     if (type != null) join.append(type).append(" ");
-    join.append("JOIN ")
-      .append(table.trim())
-      .append(" ON ")
-      .append(condition.trim())
-    ;
+      join.append("JOIN ")
+        .append(table.trim())
+        .append(" ON ")
+        .append(condition.trim())
+      ;
     if (this.joins == null) {
       this.joins = new LinkedHashSet<String>();
     }
@@ -109,29 +130,37 @@ public class QueryBuilder {
 
   /** Construye y ejecuta el query. */
   public ResultSet get() throws SQLException {
+    if (this.db == null) throw new SQLException("SQLiteDatabase == null");
     return this.db.query(toString());
   }
 
   /** Compilamos el query. */
   @Override public String toString() {
+    // SELECT:
     StringBuilder query = new StringBuilder();
     query.append("SELECT ");
     if (this.distinct) query.append("DISTINCT ");
     if (this.columns != null && !this.columns.isEmpty()) {
       for (int i = 0; i < this.columns.size(); i++) {
-        if (i > 0) query.append(',');
+        if (i > 0) query.append(','); 
         query.append(this.columns.get(i));
       }
     } else {
       query.append("*");
     }
+    // FROM:
     query.append(" FROM ");
+    if (this.from != null) {
+      query.append("(").append(this.from).append(") AS ");
+    }
     query.append(this.table);
+    // JOIN:
     if (this.joins != null && !this.joins.isEmpty()) {
        for (String join : this.joins) {
         appendClause(query, " ", join);
       }
     }
+    // EXTRAS:
     appendClause(query, " WHERE ", this.where);
     appendClause(query, " GROUP BY ", this.groupBy);
     appendClause(query, " HAVING ", this.having);
