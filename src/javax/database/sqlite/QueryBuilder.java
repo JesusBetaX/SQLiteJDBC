@@ -129,9 +129,13 @@ public class QueryBuilder {
   }
 
   /** Construye y ejecuta el query. */
+   public ResultSet get(SQLiteDatabase db) throws SQLException {
+     if (db == null) throw new SQLException("SQLiteDatabase == null");
+     this.db = db;
+     return this.db.query(toString());
+   }
   public ResultSet get() throws SQLException {
-    if (this.db == null) throw new SQLException("SQLiteDatabase == null");
-    return this.db.query(toString());
+    return get(this.db);
   }
 
   /** Compilamos el query. */
